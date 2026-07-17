@@ -45,7 +45,6 @@ let allFrames = [];
 let undoStack = [];
 let redoStack = [];
 const MAX_UNDO = 50;
-let framesUsageCounts = {};
 
 function resolveSelectedFrame() {
   const params = new URLSearchParams(window.location.search);
@@ -358,11 +357,7 @@ async function fetchSupabaseFrames() {
       .order('created_at', { ascending: false });
 
   if (!error && data) {
-    allFrames = data.map(row => ({ name: row.name, src: row.src, category: row.category || 'general', usage_count: row.usage_count || 0 }));
-    framesUsageCounts = data.reduce((acc, row) => {
-      acc[row.name] = row.usage_count || 0;
-      return acc;
-    }, {});
+    allFrames = data.map(row => ({ name: row.name, src: row.src, category: row.category || 'general' }));
   }
   } catch (error) {
     console.error('Failed to load frames from Supabase:', error);
@@ -511,21 +506,6 @@ downloadBtn.addEventListener('click', async () => {
       resultModal.setAttribute('aria-hidden', 'false');
     }
 
-    const user = window.FrameMe?.currentUser || null;
-    if (user && selectedFrame) {
-      const imageData = previewCanvas.toDataURL('image/png');
-      await window.FrameMe.supabase.from('downloads').insert({
-        user_id: user.id,
-        frame_name: selectedFrame.name,
-        image_data: imageData
-      });
-      const newCount = (framesUsageCounts[selectedFrame.name] || 0) + 1;
-      framesUsageCounts[selectedFrame.name] = newCount;
-      await window.FrameMe.supabase
-        .from('frames')
-        .update({ usage_count: newCount })
-        .eq('name', selectedFrame.name);
-    }
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (error) {
     console.error('Download failed:', error);

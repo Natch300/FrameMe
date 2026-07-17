@@ -20,7 +20,6 @@
         <p class="subtitle">Manage the templates you have uploaded.</p>
       </div>
       <div class="hero__meta">
-        <a href="downloads.html" class="btn-ghost">Downloads</a>
         <a href="upload.html" class="btn-ghost">Upload new</a>
         <button id="authBtn" class="btn-ghost" type="button">Sign out</button>
       </div>
@@ -151,7 +150,7 @@
       try {
         const { data, error } = await window.FrameMe.supabase
           .from('frames')
-          .select('id, name, src, is_public, created_at, usage_count, category')
+          .select('id, name, src, is_public, created_at, category')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -191,7 +190,7 @@
               </button>
             </div>
           </div>
-          <span>${frame.name} ${frame.is_public ? '· Public' : '· Private'} · ${frame.usage_count || 0} uses</span>
+          <span>${frame.name} ${frame.is_public ? '· Public' : '· Private'}</span>
         `;
         myFrameGallery.appendChild(card);
       });
