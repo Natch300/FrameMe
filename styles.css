@@ -1001,6 +1001,18 @@ button:disabled {
   background: rgba(63, 211, 214, 0.03);
 }
 
+.upload-form .file-input-wrapper--drag {
+  border-color: var(--cyan);
+  background: rgba(63, 211, 214, 0.06);
+  transform: scale(1.01);
+}
+
+.upload-form .file-input-wrapper--has-file {
+  border-style: solid;
+  border-color: rgba(63, 211, 214, 0.4);
+  background: rgba(63, 211, 214, 0.04);
+}
+
 .upload-form .file-input-wrapper input[type="file"] {
   position: absolute;
   inset: 0;

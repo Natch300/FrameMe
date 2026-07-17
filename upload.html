@@ -45,18 +45,18 @@
                <option value="event">Event</option>
              </select>
 
-              <label for="frameFile">Frame image</label>
-              <div class="file-input-wrapper">
-                <input id="frameFile" type="file" accept="image/png,image/jpeg,image/webp" required />
-                <div class="file-input-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <span>Drop your frame here or <strong>click to browse</strong></span>
-                </div>
-              </div>
+               <label for="frameFile">Frame image</label>
+               <div class="file-input-wrapper" id="fileInputWrapper">
+                 <input id="frameFile" type="file" accept="image/png,image/jpeg,image/webp" required />
+                 <div class="file-input-label" id="fileInputLabel">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                     <polyline points="17 8 12 3 7 8" />
+                     <line x1="12" y1="3" x2="12" y2="15" />
+                   </svg>
+                   <span id="fileInputText">Drop your frame here or <strong>click to browse</strong></span>
+                 </div>
+               </div>
               <p class="help-text">Use a PNG with transparency for best results. JPG and WebP are also supported.</p>
 
              <label class="checkbox-field">
@@ -365,6 +365,53 @@
         uploadLimitText.textContent = 'Unable to check limit';
         uploadLimitIcon.innerHTML = `<img src="${iconBase}alert-circle.svg" alt="" />`;
       }
+    }
+
+    const fileInputWrapper = document.getElementById('fileInputWrapper');
+    const fileInput = document.getElementById('frameFile');
+    const fileInputText = document.getElementById('fileInputText');
+
+    function updateFileInputUI(file) {
+      if (file) {
+        fileInputWrapper.classList.add('file-input-wrapper--has-file');
+        fileInputText.innerHTML = `<strong>${file.name}</strong> <span style="color: var(--text-faint);">(${(file.size / 1024 / 1024).toFixed(1)} MB)</span>`;
+      } else {
+        fileInputWrapper.classList.remove('file-input-wrapper--has-file');
+        fileInputText.innerHTML = 'Drop your frame here or <strong>click to browse</strong>';
+      }
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      updateFileInputUI(e.target.files[0]);
+    });
+
+    if (fileInputWrapper) {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileInputWrapper.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        fileInputWrapper.addEventListener(eventName, () => {
+          fileInputWrapper.classList.add('file-input-wrapper--drag');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        fileInputWrapper.addEventListener(eventName, () => {
+          fileInputWrapper.classList.remove('file-input-wrapper--drag');
+        });
+      });
+
+      fileInputWrapper.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          fileInput.files = e.dataTransfer.files;
+          updateFileInputUI(file);
+        }
+      });
     }
 
     uploadForm.addEventListener('submit', async (e) => {
