@@ -191,13 +191,7 @@
               </button>
             </div>
           </div>
-          <div class="frame-card__body">
-            <div class="frame-card__name">${frame.name}</div>
-            <div class="frame-card__meta">
-              <span class="frame-card__category">${frame.is_public ? 'public' : 'private'}</span>
-              <span class="frame-card__usage">${frame.usage_count || 0} uses</span>
-            </div>
-          </div>
+          <span>${frame.name} ${frame.is_public ? '· Public' : '· Private'} · ${frame.usage_count || 0} uses</span>
         `;
         myFrameGallery.appendChild(card);
       });
