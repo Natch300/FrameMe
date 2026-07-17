@@ -259,21 +259,42 @@ function renderCanvas() {
   }
 }
 
-function loadFrameImage() {
+async function loadFrameImage() {
   if (!selectedFrame) {
     frameImage = new Image();
     return;
   }
+
   frameImage = new Image();
-  frameImage.crossOrigin = 'anonymous';
-  frameImage.onload = renderCanvas;
-  frameImage.onerror = () => {
-    console.error('Unable to load frame image:', selectedFrame.src);
-    previewPlaceholder.textContent = 'Unable to load the selected frame.';
-    previewPlaceholder.style.display = 'grid';
-    downloadBtn.disabled = true;
+
+  const tryLoad = (withCors) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      if (withCors) img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = selectedFrame.src;
+    });
   };
-  frameImage.src = selectedFrame.src;
+
+  try {
+    frameImage = await tryLoad(true);
+    console.log('[loadFrameImage] frame loaded with CORS:', selectedFrame.name);
+  } catch {
+    console.warn('[loadFrameImage] CORS failed, trying without CORS');
+    try {
+      frameImage = await tryLoad(false);
+      console.log('[loadFrameImage] frame loaded without CORS:', selectedFrame.name);
+    } catch {
+      console.error('[loadFrameImage] frame failed to load:', selectedFrame.src);
+      previewPlaceholder.textContent = 'Unable to load the selected frame. Please check your internet connection and try again.';
+      previewPlaceholder.style.display = 'grid';
+      downloadBtn.disabled = true;
+      return;
+    }
+  }
+
+  renderCanvas();
 }
 
 function resetPhotoTransform() {
@@ -437,7 +458,7 @@ async function fetchSupabaseFrames() {
     console.error('Failed to load frames from Supabase:', error);
   }
   await resolveSelectedFrame();
-  loadFrameImage();
+  await loadFrameImage();
   updatePhotoControls();
   updatePreviewVisibility();
   frameReadyResolve();
