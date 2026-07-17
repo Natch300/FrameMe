@@ -278,7 +278,7 @@
       try {
         const { data, error } = await window.FrameMe.supabase
           .from('downloads')
-          .select('frame_name, created_at')
+          .select('frame_name, created_at, image_data')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -304,9 +304,11 @@
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
         card.setAttribute('aria-label', `Re-download ${frameName}`);
+        const download = downloads.find(d => d.frame_name === frameName);
+        const imageSrc = download?.image_data || 'assets/icons/image.svg';
         card.innerHTML = `
           <div class="frame-card__img-wrap">
-            <img src="assets/icons/image.svg" alt="" />
+            <img src="${imageSrc}" alt="Framed ${frameName}" loading="lazy" />
             <button type="button" class="share-btn" data-share="${frameName}" aria-label="Copy share link">
               <img src="assets/icons/share.svg" alt="" />
             </button>

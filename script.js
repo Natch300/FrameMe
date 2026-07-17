@@ -513,9 +513,11 @@ downloadBtn.addEventListener('click', async () => {
 
     const user = window.FrameMe?.currentUser || null;
     if (user && selectedFrame) {
+      const imageData = previewCanvas.toDataURL('image/png');
       await window.FrameMe.supabase.from('downloads').insert({
         user_id: user.id,
-        frame_name: selectedFrame.name
+        frame_name: selectedFrame.name,
+        image_data: imageData
       });
       const newCount = (framesUsageCounts[selectedFrame.name] || 0) + 1;
       framesUsageCounts[selectedFrame.name] = newCount;
