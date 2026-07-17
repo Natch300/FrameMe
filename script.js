@@ -166,35 +166,31 @@ function loadPhotoFromFile(file) {
   reader.onload = () => {
     console.log('[loadPhotoFromFile] FileReader done, length:', reader.result.length);
     photoImage = new Image();
-  photoImage.onload = () => {
-    console.log('[loadPhotoFromFile] photoImage loaded:', photoImage.naturalWidth, photoImage.naturalHeight);
-    resetPhotoTransform();
-    const tryRender = () => {
-      if (selectedFrame && frameImage.complete && frameImage.naturalWidth) {
-        renderCanvas();
-      } else {
-        console.log('[loadPhotoFromFile] frame not ready yet, waiting...');
+    photoImage.onload = async () => {
+      console.log('[loadPhotoFromFile] photoImage loaded:', photoImage.naturalWidth, photoImage.naturalHeight);
+      resetPhotoTransform();
+      if (!selectedFrame) {
+        previewPlaceholder.textContent = 'Loading template...';
+        previewPlaceholder.style.display = 'grid';
+        await frameReadyPromise;
+      }
+      if (selectedFrame && (!frameImage.complete || !frameImage.naturalWidth)) {
         previewPlaceholder.textContent = 'Loading frame...';
         previewPlaceholder.style.display = 'grid';
+        await new Promise(resolve => {
+          const onLoad = () => {
+            frameImage.removeEventListener('load', onLoad);
+            resolve();
+          };
+          frameImage.addEventListener('load', onLoad);
+          setTimeout(() => {
+            frameImage.removeEventListener('load', onLoad);
+            resolve();
+          }, 10000);
+        });
       }
+      renderCanvas();
     };
-    tryRender();
-    if (!(selectedFrame && frameImage.complete && frameImage.naturalWidth)) {
-      const onFrameLoad = () => {
-        frameImage.removeEventListener('load', onFrameLoad);
-        console.log('[loadPhotoFromFile] frame loaded, rendering now');
-        renderCanvas();
-      };
-      frameImage.addEventListener('load', onFrameLoad);
-      setTimeout(() => {
-        frameImage.removeEventListener('load', onFrameLoad);
-        if (!(selectedFrame && frameImage.complete && frameImage.naturalWidth)) {
-          previewPlaceholder.textContent = 'Frame failed to load. Try selecting a different template.';
-          previewPlaceholder.style.display = 'grid';
-        }
-      }, 8000);
-    }
-  };
     photoImage.onerror = (e) => {
       console.error('[loadPhotoFromFile] photoImage failed to load:', e);
       previewPlaceholder.textContent = 'Unable to load the selected photo. Try a different image format like JPG or PNG.';
@@ -253,7 +249,6 @@ function renderCanvas() {
   };
 
   drawFrame();
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   if (isMobile) {
     requestAnimationFrame(() => requestAnimationFrame(drawFrame));
   }
@@ -426,6 +421,11 @@ async function signOut() {
   }
 }
 
+let frameReadyResolve = null;
+let frameReadyPromise = new Promise(resolve => {
+  frameReadyResolve = resolve;
+});
+
 async function fetchSupabaseFrames() {
   try {
     const { data, error } = await window.FrameMe.supabase
@@ -444,6 +444,7 @@ async function fetchSupabaseFrames() {
   loadFrameImage();
   updatePhotoControls();
   updatePreviewVisibility();
+  frameReadyResolve();
 }
 
 photoInput.addEventListener('change', event => {
