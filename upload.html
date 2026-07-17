@@ -20,7 +20,7 @@
         <p class="subtitle">Share your own frame template with the community.</p>
       </div>
       <div class="hero__meta">
-        <a href="browse.html" class="btn-ghost">Back to gallery</a>
+        <a href="index.html" class="btn-ghost">Back to gallery</a>
         <button id="authBtn" class="btn-ghost" type="button">Sign in</button>
       </div>
     </header>
@@ -435,7 +435,7 @@
         await refreshUploadLimit();
 
         setTimeout(() => {
-          window.location.href = 'browse.html';
+          window.location.href = 'index.html';
         }, 1500);
       } catch (error) {
         uploadError.textContent = error.message || 'Upload failed. Please try again.';

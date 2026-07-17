@@ -142,7 +142,7 @@
       }
 
       if (!user) {
-        window.location.href = 'browse.html';
+        window.location.href = 'index.html';
         return;
       }
 
@@ -198,7 +198,7 @@
       myFrameGallery.querySelectorAll('.share-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const url = new URL('index.html', window.location.href);
+          const url = new URL('editor.html', window.location.href);
           url.searchParams.set('frameId', btn.dataset.share);
           navigator.clipboard.writeText(url.toString()).then(() => {
             btn.classList.add('copied');
@@ -434,7 +434,7 @@
 
       const user = window.FrameMe?.currentUser || null;
       if (!user) {
-        window.location.href = 'browse.html';
+        window.location.href = 'index.html';
         return;
       }
 
@@ -443,7 +443,7 @@
         try {
           await window.FrameMe.supabase.auth.signOut();
           window.FrameMe.currentUser = null;
-          window.location.href = 'browse.html';
+          window.location.href = 'index.html';
         } catch (error) {
           console.error('Sign out failed:', error);
         }

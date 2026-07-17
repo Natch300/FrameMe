@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FrameMe — Composite your photo with a frame</title>
-  <meta name="description" content="Upload a photo, pick a frame template, position it, and export a finished PNG." />
+  <title>FrameMe — Choose a frame template</title>
+  <meta name="description" content="Browse frame templates and pick one for your photo." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
@@ -15,94 +15,34 @@
   <div class="page-shell">
     <header class="hero">
       <div class="hero__identity">
-        <p class="eyebrow">Photo compositor</p>
+        <p class="eyebrow">Template gallery</p>
         <h1 class="wordmark"><img src="assets/icons/FrameMe Logo Transparent white.svg" alt="FrameMe" class="wordmark__img" /></h1>
-        <p class="subtitle">Drop in a photo, pick a frame, drag it into place, and export the result — all in your browser.</p>
+        <p class="subtitle">Choose a frame template to start editing your photo.</p>
       </div>
       <div class="hero__meta">
-        <a id="changeFrameLink" href="browse.html" class="btn-ghost">Change template</a>
+        <a id="myFramesLink" href="my-frames.html" class="btn-ghost" hidden>My Frames</a>
+        <a id="uploadFrameLink" href="upload.html" class="btn-ghost" hidden>Upload frame</a>
         <button id="authBtn" class="btn-ghost" type="button">Sign in</button>
       </div>
     </header>
 
-    <main class="content-grid">
-      <section class="panel controls" aria-label="Editing steps">
+    <div class="search-bar">
+      <input id="searchInput" type="search" placeholder="Search templates..." autocomplete="off" />
+      <select id="categoryFilter" class="category-filter">
+        <option value="">All categories</option>
+        <option value="general">General</option>
+        <option value="aesthetic">Aesthetic</option>
+        <option value="minimal">Minimal</option>
+        <option value="birthday">Birthday</option>
+        <option value="event">Event</option>
+      </select>
+      <span id="searchCount" class="search-count"></span>
+    </div>
 
-        <div class="step-card" id="dropZone">
-          <div class="step-card__head">
-            <span class="step-index">01</span>
-            <h2>Upload your photo</h2>
-          </div>
-          <input id="photoInput" type="file" accept="image/*" class="file-input" />
-          <p class="help-text">Pick a photo from your device, or drag and drop it here.</p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-card__head">
-            <span class="step-index">02</span>
-            <h2>Adjust your photo</h2>
-          </div>
-
-          <div class="slider-group">
-            <label for="scaleInput">Zoom <span id="scaleValue" class="value-badge">100%</span></label>
-            <input id="scaleInput" type="range" min="50" max="200" value="100" />
-          </div>
-          <div class="slider-group">
-            <label for="offsetXInput">Horizontal position <span id="offsetXValue" class="value-badge">0</span></label>
-            <input id="offsetXInput" type="range" min="-100" max="100" value="0" />
-          </div>
-          <div class="slider-group">
-            <label for="offsetYInput">Vertical position <span id="offsetYValue" class="value-badge">0</span></label>
-            <input id="offsetYInput" type="range" min="-100" max="100" value="0" />
-          </div>
-
-          <div class="undo-redo-group">
-            <button id="undoBtn" type="button" class="btn-ghost" disabled>
-              <img src="assets/icons/undo.svg" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;" />
-              Undo
-            </button>
-            <button id="redoBtn" type="button" class="btn-ghost" disabled>
-              <img src="assets/icons/redo.svg" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;" />
-              Redo
-            </button>
-          </div>
-
-          <p class="help-text">Drag the photo inside the preview, or fine‑tune it with the sliders above. Use mouse wheel to zoom.</p>
-        </div>
-
-        <div class="step-card step-card--action">
-          <div class="step-card__head">
-            <span class="step-index">03</span>
-            <h2>Download</h2>
-          </div>
-          <button id="downloadBtn" disabled>Download framed image</button>
-          <p class="help-text">Saves your finished design as a PNG.</p>
-        </div>
-
-      </section>
-
-      <section class="panel preview-panel">
-        <div class="preview-card">
-          <div class="preview-card__head">
-            <h2>Preview</h2>
-            <div class="preview-card__meta">
-              <span class="preview-card__hint">Drag inside the frame to reposition</span>
-              <button id="shareFrameBtn" type="button" class="btn-ghost" hidden>
-                <img src="assets/icons/share.svg" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:6px;" />
-                Share template
-              </button>
-            </div>
-          </div>
-          <div class="canvas-shell">
-            <canvas id="previewCanvas" width="900" height="1200"></canvas>
-            <div id="previewPlaceholder" class="placeholder" aria-live="polite">
-              <span>Select a photo to preview your design.</span>
-            </div>
-            <span class="bracket bracket--tl" aria-hidden="true"></span>
-            <span class="bracket bracket--tr" aria-hidden="true"></span>
-            <span class="bracket bracket--bl" aria-hidden="true"></span>
-            <span class="bracket bracket--br" aria-hidden="true"></span>
-          </div>
+    <main class="content-grid browse-grid">
+      <section class="panel browse-panel" aria-label="Frame templates">
+        <div id="frameGallery" class="frame-gallery">
+          <div class="loading-state">Loading templates...</div>
         </div>
       </section>
     </main>
@@ -110,21 +50,6 @@
     <footer class="site-footer">
       <p>Website created by <strong>ExploitNatch</strong> — <a href="https://www.tiktok.com/@saiku_12" target="_blank" rel="noopener">@saiku_12 on TikTok</a></p>
     </footer>
-  </div>
-
-  <div id="resultModal" class="modal" aria-hidden="true">
-    <div class="modal__backdrop" data-close="resultModal"></div>
-    <div class="modal__dialog modal__dialog--result" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
-      <div class="modal__head">
-        <h2 id="resultModalTitle">Your framed photo</h2>
-        <button class="modal__close" data-close="resultModal" aria-label="Close">×</button>
-      </div>
-      <div class="result-body">
-        <img id="resultImage" alt="Framed photo" />
-        <p class="result-hint">Long-press the image and choose <strong>Save to Photos</strong> to download it.</p>
-        <a id="resultDownload" class="btn-primary" download="framed-photo.png">Download</a>
-      </div>
-    </div>
   </div>
 
   <div id="authModal" class="modal" aria-hidden="true">
@@ -171,6 +96,294 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="supabaseClient.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const frameGallery = document.getElementById('frameGallery');
+    const authBtn = document.getElementById('authBtn');
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authError = document.getElementById('authError');
+    const authSubmit = document.getElementById('authSubmit');
+    const authToggle = document.getElementById('authToggle');
+    const googleBtn = document.getElementById('googleBtn');
+    const socialError = document.getElementById('socialError');
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authPanels = {
+      email: document.getElementById('authPanelEmail'),
+      social: document.getElementById('authPanelSocial')
+    };
+    const searchInput = document.getElementById('searchInput');
+    const searchCount = document.getElementById('searchCount');
+    const myFramesLink = document.getElementById('myFramesLink');
+    const uploadFrameLink = document.getElementById('uploadFrameLink');
+    const categoryFilter = document.getElementById('categoryFilter');
+
+    let isSignUp = false;
+    let allFrames = [];
+    let currentUser = null;
+
+    function updateAuthUI() {
+      const user = window.FrameMe?.currentUser || null;
+      currentUser = user;
+      if (user) {
+        authBtn.textContent = 'Sign out';
+        authBtn.onclick = signOut;
+        myFramesLink.hidden = false;
+        uploadFrameLink.hidden = false;
+      } else {
+        authBtn.textContent = 'Sign in';
+        authBtn.onclick = openAuthModal;
+        myFramesLink.hidden = true;
+        uploadFrameLink.hidden = true;
+      }
+    }
+
+    function openAuthModal() {
+      authModal.classList.add('modal--open');
+      authModal.setAttribute('aria-hidden', 'false');
+      switchAuthTab('email');
+      authEmail.focus();
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('modal--open');
+      authModal.setAttribute('aria-hidden', 'true');
+      authError.textContent = '';
+      socialError.textContent = '';
+      authForm.reset();
+    }
+
+    function setAuthError(message) {
+      authError.textContent = message;
+    }
+
+    function switchAuthTab(tab) {
+      authTabs.forEach(t => {
+        const isSelected = t.dataset.authTab === tab;
+        t.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        t.tabIndex = isSelected ? 0 : -1;
+      });
+      Object.entries(authPanels).forEach(([key, panel]) => {
+        panel.hidden = key !== tab;
+      });
+    }
+
+    function getRedirectUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      setAuthError('');
+
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        setAuthError('Please enter both email and password.');
+        return;
+      }
+
+      try {
+        authSubmit.disabled = true;
+        if (isSignUp) {
+          const { error } = await window.FrameMe.supabase.auth.signUp({ email, password });
+          if (error) throw error;
+          setAuthError('Check your email for the confirmation link.');
+          authToggle.textContent = 'Have an account? Sign in';
+          isSignUp = false;
+          authSubmit.textContent = 'Sign in';
+        } else {
+          const { data, error } = await window.FrameMe.supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          window.FrameMe.currentUser = data.user;
+          closeAuthModal();
+          updateAuthUI();
+          loadFrames();
+        }
+      } catch (error) {
+        setAuthError(error.message || 'Something went wrong.');
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function signInWithOAuth(provider) {
+      try {
+        socialError.textContent = '';
+        const { data, error } = await window.FrameMe.supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: getRedirectUrl() }
+        });
+        if (error) throw error;
+      } catch (error) {
+        socialError.textContent = error.message || 'Something went wrong.';
+      }
+    }
+
+    async function signOut() {
+      try {
+        await window.FrameMe.supabase.auth.signOut();
+        window.FrameMe.currentUser = null;
+        updateAuthUI();
+        loadFrames();
+      } catch (error) {
+        console.error('Sign out failed:', error);
+      }
+    }
+
+    function renderFrameCard(frame) {
+      const card = document.createElement('div');
+      card.className = 'frame-card';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `Use template ${frame.name}`);
+      card.innerHTML = `
+        <div class="frame-card__img-wrap">
+          <img src="${frame.src}" alt="Frame ${frame.name}" loading="lazy" />
+          <div class="frame-card__actions">
+            <button type="button" class="share-btn" data-share="${frame.id}" aria-label="Copy share link">
+              <img src="assets/icons/share.svg" alt="" />
+            </button>
+          </div>
+        </div>
+        <span>${frame.name} <small class="frame-card__category">${frame.category || 'general'}</small></span>
+      `;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.share-btn')) return;
+        const url = new URL('editor.html', window.location.href);
+        url.searchParams.set('frameId', frame.id);
+        window.location.href = url.toString();
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const url = new URL('editor.html', window.location.href);
+          url.searchParams.set('frameId', frame.id);
+          window.location.href = url.toString();
+        }
+      });
+      return card;
+    }
+
+    function copyShareLink(frameId) {
+      const url = new URL('editor.html', window.location.href);
+      url.searchParams.set('frameId', frameId);
+      navigator.clipboard.writeText(url.toString()).then(() => {
+        const btn = document.querySelector(`[data-share="${frameId}"]`);
+        if (btn) {
+          btn.classList.add('copied');
+          btn.setAttribute('aria-label', 'Link copied');
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.setAttribute('aria-label', 'Copy share link');
+          }, 1500);
+        }
+      });
+    }
+
+    async function loadFrames() {
+      let supabaseFrames = [];
+      try {
+        const { data, error } = await window.FrameMe.supabase
+          .from('frames')
+          .select('id, name, src, category')
+          .eq('is_public', true)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          supabaseFrames = data.map(row => ({
+            id: row.id,
+            name: row.name,
+            src: row.src,
+            category: row.category || 'general'
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load frames from Supabase:', error);
+      }
+
+      allFrames = supabaseFrames;
+      filterAndRenderFrames();
+    }
+
+    function filterAndRenderFrames() {
+      const query = searchInput.value.trim().toLowerCase();
+      const category = categoryFilter.value;
+      const filtered = allFrames.filter(f => {
+        const matchesQuery = !query || f.name.toLowerCase().includes(query);
+        const matchesCategory = !category || f.category === category;
+        return matchesQuery && matchesCategory;
+      });
+
+      frameGallery.innerHTML = '';
+
+      if (filtered.length === 0) {
+        frameGallery.innerHTML = '<div class="loading-state">No templates available yet.</div>';
+        searchCount.textContent = '';
+        return;
+      }
+
+      searchCount.textContent = `${filtered.length} template${filtered.length === 1 ? '' : 's'}`;
+
+      filtered.forEach(frame => {
+        frameGallery.appendChild(renderFrameCard(frame));
+      });
+    }
+
+    searchInput.addEventListener('input', filterAndRenderFrames);
+    categoryFilter.addEventListener('change', filterAndRenderFrames);
+
+    frameGallery.addEventListener('click', (e) => {
+      const shareBtn = e.target.closest('.share-btn');
+      if (shareBtn) {
+        e.stopPropagation();
+        copyShareLink(shareBtn.dataset.share);
+      }
+    });
+
+    document.querySelectorAll('[data-close="authModal"]').forEach(el => {
+      el.addEventListener('click', closeAuthModal);
+    });
+
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => switchAuthTab(tab.dataset.authTab));
+    });
+
+    authToggle.addEventListener('click', () => {
+      isSignUp = !isSignUp;
+      authSubmit.textContent = isSignUp ? 'Sign up' : 'Sign in';
+      authToggle.textContent = isSignUp ? 'Have an account? Sign in' : 'Need an account? Sign up';
+      setAuthError('');
+    });
+
+    authForm.addEventListener('submit', handleAuthSubmit);
+
+    googleBtn.addEventListener('click', () => signInWithOAuth('google'));
+
+    authModal.addEventListener('click', (event) => {
+      if (event.target === authModal) closeAuthModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && authModal.classList.contains('modal--open')) {
+        closeAuthModal();
+      }
+    });
+
+    async function initAuth() {
+      try {
+        const { data } = await window.FrameMe.supabase.auth.getSession();
+        window.FrameMe.currentUser = data.session?.user || null;
+      } catch (error) {
+        window.FrameMe.currentUser = null;
+      }
+      updateAuthUI();
+      loadFrames();
+    }
+
+    initAuth();
+  </script>
 </body>
 </html>

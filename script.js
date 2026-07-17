@@ -596,7 +596,7 @@ changeFrameLink.addEventListener('click', () => {
 
 shareFrameBtn.addEventListener('click', () => {
   if (!selectedFrame) return;
-  const url = new URL('index.html', window.location.href);
+  const url = new URL('editor.html', window.location.href);
   url.searchParams.set('frameId', selectedFrame.id);
   navigator.clipboard.writeText(url.toString()).then(() => {
     const original = shareFrameBtn.innerHTML;
