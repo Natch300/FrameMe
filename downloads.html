@@ -307,11 +307,19 @@
         card.innerHTML = `
           <div class="frame-card__img-wrap">
             <img src="assets/icons/image.svg" alt="" />
-            <button type="button" class="share-btn" data-share="${frameName}" aria-label="Copy share link">
-              <img src="assets/icons/share.svg" alt="" />
-            </button>
+            <div class="frame-card__actions">
+              <button type="button" class="share-btn" data-share="${frameName}" aria-label="Copy share link">
+                <img src="assets/icons/share.svg" alt="" />
+              </button>
+            </div>
           </div>
-          <span>${frameName}</span>
+          <div class="frame-card__body">
+            <div class="frame-card__name">${frameName}</div>
+            <div class="frame-card__meta">
+              <span class="frame-card__category">history</span>
+              <span class="frame-card__usage">download</span>
+            </div>
+          </div>
         `;
         card.addEventListener('click', (e) => {
           if (e.target.closest('.share-btn')) return;

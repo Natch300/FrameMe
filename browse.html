@@ -245,8 +245,17 @@
           <button type="button" class="share-btn" data-share="${frame.name}" aria-label="Copy share link">
             <img src="assets/icons/share.svg" alt="" />
           </button>
+          <div class="frame-card__overlay">
+            <span class="frame-card__overlay-text">Use this template</span>
+          </div>
         </div>
-        <span>${frame.name} <small class="frame-card__category">${frame.category || 'general'}</small></span>
+        <div class="frame-card__body">
+          <div class="frame-card__name">${frame.name}</div>
+          <div class="frame-card__meta">
+            <span class="frame-card__category">${frame.category || 'general'}</span>
+            <span class="frame-card__usage">${frame.usage_count || 0} uses</span>
+          </div>
+        </div>
       `;
       card.addEventListener('click', (e) => {
         if (e.target.closest('.share-btn')) return;
