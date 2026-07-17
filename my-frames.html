@@ -179,7 +179,7 @@
           <div class="frame-card__img-wrap">
             <img src="${frame.src}" alt="Frame ${frame.name}" loading="lazy" />
             <div class="frame-card__actions">
-              <button type="button" class="share-btn" data-share="${frame.name}" aria-label="Copy share link">
+              <button type="button" class="share-btn" data-share="${frame.id}" aria-label="Copy share link">
                 <img src="assets/icons/share.svg" alt="" />
               </button>
               <button type="button" class="edit-btn" data-id="${frame.id}" data-name="${frame.name}" data-public="${frame.is_public}" data-src="${frame.src}" data-category="${frame.category || 'general'}" aria-label="Edit template">
@@ -199,7 +199,7 @@
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const url = new URL('index.html', window.location.href);
-          url.searchParams.set('frame', btn.dataset.share);
+          url.searchParams.set('frameId', btn.dataset.share);
           navigator.clipboard.writeText(url.toString()).then(() => {
             btn.classList.add('copied');
             btn.setAttribute('aria-label', 'Link copied');

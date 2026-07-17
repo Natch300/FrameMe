@@ -48,6 +48,14 @@ const MAX_UNDO = 50;
 
 function resolveSelectedFrame() {
   const params = new URLSearchParams(window.location.search);
+  const frameId = params.get('frameId');
+  if (frameId) {
+    const match = allFrames.find(f => f.id === frameId);
+    if (match) {
+      selectedFrame = match;
+      return;
+    }
+  }
   const frameName = params.get('frame');
   if (frameName) {
     const match = allFrames.find(f => f.name === frameName);
@@ -352,12 +360,12 @@ async function fetchSupabaseFrames() {
   try {
     const { data, error } = await window.FrameMe.supabase
       .from('frames')
-      .select('name, src')
+      .select('id, name, src')
       .eq('is_public', true)
       .order('created_at', { ascending: false });
 
   if (!error && data) {
-    allFrames = data.map(row => ({ name: row.name, src: row.src, category: row.category || 'general' }));
+    allFrames = data.map(row => ({ id: row.id, name: row.name, src: row.src, category: row.category || 'general' }));
   }
   } catch (error) {
     console.error('Failed to load frames from Supabase:', error);
@@ -521,7 +529,7 @@ changeFrameLink.addEventListener('click', () => {
 shareFrameBtn.addEventListener('click', () => {
   if (!selectedFrame) return;
   const url = new URL('index.html', window.location.href);
-  url.searchParams.set('frame', selectedFrame.name);
+  url.searchParams.set('frameId', selectedFrame.id);
   navigator.clipboard.writeText(url.toString()).then(() => {
     const original = shareFrameBtn.innerHTML;
     shareFrameBtn.innerHTML = 'Copied!';
