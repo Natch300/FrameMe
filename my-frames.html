@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrameMe — My Templates</title>
+  <meta name="description" content="Manage your uploaded frame templates." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/FrameMe Logo Transparent.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__identity">
+        <p class="eyebrow">My Templates</p>
+        <h1 class="wordmark"><img src="assets/icons/FrameMe Logo Transparent white.svg" alt="FrameMe" class="wordmark__img" /></h1>
+        <p class="subtitle">Manage the templates you have uploaded.</p>
+      </div>
+      <div class="hero__meta">
+        <a href="downloads.html" class="btn-ghost">Downloads</a>
+        <a href="upload.html" class="btn-ghost">Upload new</a>
+        <button id="authBtn" class="btn-ghost" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <main class="content-grid browse-grid">
+      <section class="panel browse-panel" aria-label="My templates">
+        <div id="myFrameGallery" class="frame-gallery">
+          <div class="loading-state">Loading your templates...</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Website created by <strong>Nathaniel Sadomia</strong></p>
+    </footer>
+  </div>
+
+  <div id="editModal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="editModal"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="modal__head">
+        <h2 id="editModalTitle">Edit Template</h2>
+        <button class="modal__close" data-close="editModal" aria-label="Close">×</button>
+      </div>
+      <form id="editForm" class="upload-form" novalidate>
+        <label for="editFrameName">Template name</label>
+        <input id="editFrameName" type="text" required minlength="2" maxlength="60" />
+
+        <label class="checkbox-field">
+          <input id="editIsPublic" type="checkbox" />
+          <span>Public</span>
+        </label>
+
+        <label for="editFrameFile">Replace image (optional)</label>
+        <input id="editFrameFile" type="file" accept="image/png,image/jpeg,image/webp" />
+        <p class="help-text">Leave empty to keep the current image.</p>
+
+        <p id="editError" class="auth-error" role="alert" aria-live="polite"></p>
+        <p id="editSuccess" class="upload-success" role="status" aria-live="polite"></p>
+
+        <button id="editSubmit" type="submit" class="btn-primary">Save changes</button>
+        <button id="duplicateFrameBtn" type="button" class="btn-ghost" style="color:var(--cyan); margin-top:8px;">Duplicate template</button>
+        <button id="deleteFrameBtn" type="button" class="btn-ghost" style="color:#ff8a8a; margin-top:8px;">Delete template</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="confirmModal"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal__head">
+        <h2 id="confirmTitle">Delete template?</h2>
+        <button class="modal__close" data-close="confirmModal" aria-label="Close">×</button>
+      </div>
+      <p style="color:var(--text-dim); margin:0 0 18px;">This action cannot be undone. The frame image and template record will be permanently removed.</p>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button class="btn-ghost" data-close="confirmModal">Cancel</button>
+        <button id="confirmDeleteBtn" class="btn-primary" style="width:auto; background:#ff8a8a; color:#1a1204;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabaseClient.js"></script>
+  <script>
+    const myFrameGallery = document.getElementById('myFrameGallery');
+    const authBtn = document.getElementById('authBtn');
+    const editModal = document.getElementById('editModal');
+    const confirmModal = document.getElementById('confirmModal');
+    const editForm = document.getElementById('editForm');
+    const editFrameName = document.getElementById('editFrameName');
+    const editIsPublic = document.getElementById('editIsPublic');
+    const editFrameFile = document.getElementById('editFrameFile');
+    const editError = document.getElementById('editError');
+    const editSuccess = document.getElementById('editSuccess');
+    const editSubmit = document.getElementById('editSubmit');
+    const deleteFrameBtn = document.getElementById('deleteFrameBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    let editingFrameId = null;
+    let editingFramePath = null;
+    let editingFrameName = null;
+
+    function openEditModal() {
+      editModal.classList.add('modal--open');
+      editModal.setAttribute('aria-hidden', 'false');
+      editError.textContent = '';
+      editSuccess.textContent = '';
+    }
+
+    function closeEditModal() {
+      editModal.classList.remove('modal--open');
+      editModal.setAttribute('aria-hidden', 'true');
+      editForm.reset();
+      editingFrameId = null;
+      editingFramePath = null;
+      editingFrameName = null;
+    }
+
+    function openConfirmModal() {
+      confirmModal.classList.add('modal--open');
+      confirmModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeConfirmModal() {
+      confirmModal.classList.remove('modal--open');
+      confirmModal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function loadMyFrames() {
+      let user = window.FrameMe?.currentUser || null;
+      if (!user) {
+        try {
+          const { data } = await window.FrameMe.supabase.auth.getUser();
+          user = data.user || null;
+        } catch (error) {
+          user = null;
+        }
+      }
+
+      if (!user) {
+        window.location.href = 'browse.html';
+        return;
+      }
+
+      let frames = [];
+      try {
+        const { data, error } = await window.FrameMe.supabase
+          .from('frames')
+          .select('id, name, src, is_public, created_at, usage_count, category')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        frames = data;
+        console.log('[MyFrames] Auth user ID:', user.id);
+        console.log('[MyFrames] Found frames:', frames.length);
+      } else if (error) {
+        console.error('[MyFrames] Query error:', error);
+      }
+      } catch (error) {
+        console.error('Failed to load my frames:', error);
+      }
+
+      myFrameGallery.innerHTML = '';
+
+      if (frames.length === 0) {
+        myFrameGallery.innerHTML = '<div class="loading-state">You have not uploaded any templates yet.</div>';
+        return;
+      }
+
+      frames.forEach(frame => {
+        const card = document.createElement('div');
+        card.className = 'frame-card';
+        card.innerHTML = `
+          <div class="frame-card__img-wrap">
+            <img src="${frame.src}" alt="Frame ${frame.name}" loading="lazy" />
+            <div class="frame-card__actions">
+              <button type="button" class="share-btn" data-share="${frame.name}" aria-label="Copy share link">
+                <img src="assets/icons/share.svg" alt="" />
+              </button>
+              <button type="button" class="edit-btn" data-id="${frame.id}" data-name="${frame.name}" data-public="${frame.is_public}" data-src="${frame.src}" data-category="${frame.category || 'general'}" aria-label="Edit template">
+                <img src="assets/icons/edit.svg" alt="" />
+              </button>
+              <button type="button" class="duplicate-btn" data-id="${frame.id}" data-name="${frame.name}" data-public="${frame.is_public}" data-src="${frame.src}" data-category="${frame.category || 'general'}" aria-label="Duplicate template">
+                <img src="assets/icons/copy.svg" alt="" />
+              </button>
+            </div>
+          </div>
+          <span>${frame.name} ${frame.is_public ? '· Public' : '· Private'} · ${frame.usage_count || 0} uses</span>
+        `;
+        myFrameGallery.appendChild(card);
+      });
+
+      myFrameGallery.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const url = new URL('index.html', window.location.href);
+          url.searchParams.set('frame', btn.dataset.share);
+          navigator.clipboard.writeText(url.toString()).then(() => {
+            btn.classList.add('copied');
+            btn.setAttribute('aria-label', 'Link copied');
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.setAttribute('aria-label', 'Copy share link');
+            }, 1500);
+          });
+        });
+      });
+    }
+
+    function getPathFromUrl(url) {
+      try {
+        const u = new URL(url);
+        return u.pathname.replace('/storage/v1/object/public/frames/', '');
+      } catch {
+        return null;
+      }
+    }
+
+    myFrameGallery.addEventListener('click', (e) => {
+      const editBtn = e.target.closest('.edit-btn');
+      if (!editBtn) return;
+      e.stopPropagation();
+      editingFrameId = editBtn.dataset.id;
+      editingFrameName = editBtn.dataset.name;
+      editingFramePath = getPathFromUrl(editBtn.dataset.src);
+      editFrameName.value = editBtn.dataset.name;
+      editIsPublic.checked = editBtn.dataset.public === 'true';
+      editFrameFile.value = '';
+      editError.textContent = '';
+      editSuccess.textContent = '';
+      openEditModal();
+    });
+
+    myFrameGallery.addEventListener('click', async (e) => {
+      const duplicateBtn = e.target.closest('.duplicate-btn');
+      if (!duplicateBtn) return;
+      e.stopPropagation();
+      const user = window.FrameMe?.currentUser || null;
+      if (!user) return;
+
+      try {
+        const originalSrc = duplicateBtn.dataset.src;
+        const originalPath = getPathFromUrl(originalSrc);
+        const newName = duplicateBtn.dataset.name + ' (copy)';
+        const fileExt = originalPath.split('.').pop();
+        const newPath = `public/${Date.now()}_${newName.replace(/[^a-zA-Z0-9-_]+/g, '_')}.${fileExt}`;
+
+        const { data: blob } = await window.FrameMe.supabase.storage
+          .from('frames')
+          .download(originalPath);
+
+        const { error: uploadError } = await window.FrameMe.supabase.storage
+          .from('frames')
+          .upload(newPath, blob, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = window.FrameMe.supabase.storage
+          .from('frames')
+          .getPublicUrl(newPath);
+
+        const publicUrl = publicUrlData?.publicUrl || '';
+
+        if (!publicUrl) {
+          throw new Error('Could not get public URL for duplicated frame.');
+        }
+
+        const { error: insertError } = await window.FrameMe.supabase
+          .from('frames')
+          .insert({
+            name: newName,
+            src: publicUrl,
+            user_id: user.id,
+            is_public: duplicateBtn.dataset.public === 'true',
+            category: duplicateBtn.dataset.category || 'general'
+          });
+
+        if (insertError) throw insertError;
+
+        loadMyFrames();
+      } catch (error) {
+        console.error('Duplicate failed:', error);
+        alert('Failed to duplicate template. Please try again.');
+      }
+    });
+
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      editError.textContent = '';
+      editSuccess.textContent = '';
+
+      const { data: { user } } = await window.FrameMe.supabase.auth.getUser();
+      if (!user || !editingFrameId) {
+        editError.textContent = 'Session expired. Please refresh and sign in again.';
+        return;
+      }
+
+      const name = editFrameName.value.trim();
+      const isPublic = editIsPublic.checked;
+      const file = editFrameFile.files[0];
+
+      if (!name || name.length < 2) {
+        editError.textContent = 'Name must be at least 2 characters.';
+        return;
+      }
+
+      try {
+        editSubmit.disabled = true;
+        editSubmit.textContent = 'Saving...';
+
+        let src = null;
+        if (file) {
+          const fileExt = file.name.split('.').pop().toLowerCase();
+          const fileName = `${Date.now()}_${name.replace(/[^a-zA-Z0-9-_]+/g, '_')}.${fileExt}`;
+          const filePath = `public/${fileName}`;
+
+          const { error: uploadError } = await window.FrameMe.supabase.storage
+            .from('frames')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = window.FrameMe.supabase.storage
+            .from('frames')
+            .getPublicUrl(filePath);
+
+          src = publicUrlData?.publicUrl;
+
+          if (!src) {
+            throw new Error('Could not get public URL for uploaded frame.');
+          }
+
+          if (editingFramePath) {
+            await window.FrameMe.supabase.storage
+              .from('frames')
+              .remove([editingFramePath]);
+          }
+        }
+
+        const { error: updateError } = await window.FrameMe.supabase
+          .from('frames')
+          .update({
+            name: name,
+            is_public: isPublic,
+            ...(src ? { src } : {})
+          })
+          .eq('id', editingFrameId);
+
+        if (updateError) throw updateError;
+
+        editSuccess.textContent = 'Saved! Reloading...';
+        editForm.reset();
+
+        setTimeout(() => {
+          closeEditModal();
+          loadMyFrames();
+        }, 800);
+      } catch (error) {
+        editError.textContent = error.message || 'Update failed. Please try again.';
+      } finally {
+        editSubmit.disabled = false;
+        editSubmit.textContent = 'Save changes';
+      }
+    });
+
+    deleteFrameBtn.addEventListener('click', () => {
+      openConfirmModal();
+    });
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+      const user = window.FrameMe?.currentUser || null;
+      if (!user || !editingFrameId) return;
+
+      try {
+        if (editingFramePath) {
+          await window.FrameMe.supabase.storage
+            .from('frames')
+            .remove([editingFramePath]);
+        }
+
+        const { error: deleteError } = await window.FrameMe.supabase
+          .from('frames')
+          .delete()
+          .eq('id', editingFrameId)
+          .eq('user_id', user.id);
+
+        if (deleteError) throw deleteError;
+
+        closeConfirmModal();
+        closeEditModal();
+        loadMyFrames();
+      } catch (error) {
+        editError.textContent = error.message || 'Delete failed. Please try again.';
+        closeConfirmModal();
+      }
+    });
+
+    document.querySelectorAll('[data-close="editModal"]').forEach(el => {
+      el.addEventListener('click', closeEditModal);
+    });
+
+    document.querySelectorAll('[data-close="confirmModal"]').forEach(el => {
+      el.addEventListener('click', closeConfirmModal);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (confirmModal.classList.contains('modal--open')) {
+          closeConfirmModal();
+        } else if (editModal.classList.contains('modal--open')) {
+          closeEditModal();
+        }
+      }
+    });
+
+    async function initAuth() {
+      try {
+        const { data } = await window.FrameMe.supabase.auth.getUser();
+        window.FrameMe.currentUser = data.user || null;
+      } catch (error) {
+        window.FrameMe.currentUser = null;
+      }
+
+      const user = window.FrameMe?.currentUser || null;
+      if (!user) {
+        window.location.href = 'browse.html';
+        return;
+      }
+
+      authBtn.textContent = 'Sign out';
+      authBtn.onclick = async () => {
+        try {
+          await window.FrameMe.supabase.auth.signOut();
+          window.FrameMe.currentUser = null;
+          window.location.href = 'browse.html';
+        } catch (error) {
+          console.error('Sign out failed:', error);
+        }
+      };
+
+      loadMyFrames();
+    }
+
+    initAuth();
+  </script>
+</body>
+</html>

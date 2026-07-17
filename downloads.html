@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrameMe — Download History</title>
+  <meta name="description" content="View and re-download your past framed photos." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/FrameMe Logo Transparent.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__identity">
+        <p class="eyebrow">History</p>
+        <h1 class="wordmark"><img src="assets/icons/FrameMe Logo Transparent white.svg" alt="FrameMe" class="wordmark__img" /></h1>
+        <p class="subtitle">Re-download your past framed photos.</p>
+      </div>
+      <div class="hero__meta">
+        <a href="browse.html" class="btn-ghost">Back to gallery</a>
+        <button id="authBtn" class="btn-ghost" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <main class="content-grid browse-grid">
+      <section class="panel browse-panel" aria-label="Download history">
+        <div id="downloadGallery" class="frame-gallery">
+          <div class="loading-state">Loading your history...</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Website created by <strong>Nathaniel Sadomia</strong></p>
+    </footer>
+  </div>
+
+  <div id="authModal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="authModal"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div class="modal__head">
+        <h2 id="authModalTitle">Sign in to FrameMe</h2>
+        <button class="modal__close" data-close="authModal" aria-label="Close">×</button>
+      </div>
+
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab" role="tab" aria-selected="true" data-auth-tab="email">Email</button>
+        <button class="auth-tab" role="tab" aria-selected="false" data-auth-tab="social">Google</button>
+      </div>
+
+      <div id="authPanelEmail" class="auth-panel">
+        <form id="authForm" class="auth-form" novalidate>
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+          <label for="authPassword">Password</label>
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="6" />
+          <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
+          <button id="authSubmit" type="submit" class="btn-primary">Sign in</button>
+          <button id="authToggle" type="button" class="btn-ghost">Need an account? Sign up</button>
+        </form>
+      </div>
+
+      <div id="authPanelSocial" class="auth-panel" hidden>
+        <div class="social-buttons">
+          <button id="googleBtn" type="button" class="social-btn social-btn--google">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+        </div>
+        <p class="auth-error" id="socialError" role="alert" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabaseClient.js"></script>
+  <script>
+    const downloadGallery = document.getElementById('downloadGallery');
+    const authBtn = document.getElementById('authBtn');
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authError = document.getElementById('authError');
+    const authSubmit = document.getElementById('authSubmit');
+    const authToggle = document.getElementById('authToggle');
+    const googleBtn = document.getElementById('googleBtn');
+    const socialError = document.getElementById('socialError');
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authPanels = {
+      email: document.getElementById('authPanelEmail'),
+      social: document.getElementById('authPanelSocial')
+    };
+
+    let isSignUp = false;
+
+    function updateAuthUI() {
+      const user = window.FrameMe?.currentUser || null;
+      if (user) {
+        authBtn.textContent = 'Sign out';
+        authBtn.onclick = async () => {
+          try {
+            await window.FrameMe.supabase.auth.signOut();
+            window.FrameMe.currentUser = null;
+            window.location.href = 'browse.html';
+          } catch (error) {
+            console.error('Sign out failed:', error);
+          }
+        };
+      } else {
+        authBtn.textContent = 'Sign in';
+        authBtn.onclick = openAuthModal;
+      }
+    }
+
+    function openAuthModal() {
+      authModal.classList.add('modal--open');
+      authModal.setAttribute('aria-hidden', 'false');
+      switchAuthTab('email');
+      authEmail.focus();
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('modal--open');
+      authModal.setAttribute('aria-hidden', 'true');
+      authError.textContent = '';
+      socialError.textContent = '';
+      authForm.reset();
+    }
+
+    function setAuthError(message) {
+      authError.textContent = message;
+    }
+
+    function switchAuthTab(tab) {
+      authTabs.forEach(t => {
+        const isSelected = t.dataset.authTab === tab;
+        t.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        t.tabIndex = isSelected ? 0 : -1;
+      });
+      Object.entries(authPanels).forEach(([key, panel]) => {
+        panel.hidden = key !== tab;
+      });
+    }
+
+    function getRedirectUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    async function signInWithEmail() {
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        setAuthError('Please enter both email and password.');
+        return;
+      }
+
+      try {
+        authSubmit.disabled = true;
+        const { data, error } = await window.FrameMe.supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        window.FrameMe.currentUser = data.user;
+        closeAuthModal();
+        updateAuthUI();
+        loadDownloads();
+      } catch (error) {
+        setAuthError(error.message || 'Something went wrong.');
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function signUpWithEmail() {
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        setAuthError('Please enter both email and password.');
+        return;
+      }
+
+      if (password.length < 6) {
+        setAuthError('Password must be at least 6 characters.');
+        return;
+      }
+
+      try {
+        authSubmit.disabled = true;
+        const { error } = await window.FrameMe.supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setAuthError('Check your email for the confirmation link.');
+        authToggle.textContent = 'Have an account? Sign in';
+        isSignUp = false;
+        authSubmit.textContent = 'Sign in';
+      } catch (error) {
+        setAuthError(error.message || 'Something went wrong.');
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function signInWithOAuth(provider) {
+      try {
+        socialError.textContent = '';
+        const { data, error } = await window.FrameMe.supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: getRedirectUrl() }
+        });
+        if (error) throw error;
+      } catch (error) {
+        socialError.textContent = error.message || 'Something went wrong.';
+      }
+    }
+
+    async function signOut() {
+      try {
+        await window.FrameMe.supabase.auth.signOut();
+        window.FrameMe.currentUser = null;
+        updateAuthUI();
+      } catch (error) {
+        console.error('Sign out failed:', error);
+      }
+    }
+
+    document.querySelectorAll('[data-close="authModal"]').forEach(el => {
+      el.addEventListener('click', closeAuthModal);
+    });
+
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => switchAuthTab(tab.dataset.authTab));
+    });
+
+    authToggle.addEventListener('click', () => {
+      isSignUp = !isSignUp;
+      authSubmit.textContent = isSignUp ? 'Sign up' : 'Sign in';
+      authToggle.textContent = isSignUp ? 'Have an account? Sign in' : 'Need an account? Sign up';
+      setAuthError('');
+    });
+
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (isSignUp) {
+        signUpWithEmail();
+      } else {
+        signInWithEmail();
+      }
+    });
+
+    googleBtn.addEventListener('click', () => signInWithOAuth('google'));
+
+    authModal.addEventListener('click', (event) => {
+      if (event.target === authModal) closeAuthModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && authModal.classList.contains('modal--open')) {
+        closeAuthModal();
+      }
+    });
+
+    async function loadDownloads() {
+      const user = window.FrameMe?.currentUser || null;
+      if (!user) {
+        window.location.href = 'browse.html';
+        return;
+      }
+
+      let downloads = [];
+      try {
+        const { data, error } = await window.FrameMe.supabase
+          .from('downloads')
+          .select('frame_name, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          downloads = data;
+        }
+      } catch (error) {
+        console.error('Failed to load downloads:', error);
+      }
+
+      downloadGallery.innerHTML = '';
+
+      if (downloads.length === 0) {
+        downloadGallery.innerHTML = '<div class="loading-state">No downloads yet.</div>';
+        return;
+      }
+
+      const uniqueFrames = [...new Set(downloads.map(d => d.frame_name))];
+
+      uniqueFrames.forEach(frameName => {
+        const card = document.createElement('div');
+        card.className = 'frame-card';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Re-download ${frameName}`);
+        card.innerHTML = `
+          <div class="frame-card__img-wrap">
+            <img src="assets/icons/image.svg" alt="" />
+            <button type="button" class="share-btn" data-share="${frameName}" aria-label="Copy share link">
+              <img src="assets/icons/share.svg" alt="" />
+            </button>
+          </div>
+          <span>${frameName}</span>
+        `;
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.share-btn')) return;
+          const url = new URL('index.html', window.location.href);
+          url.searchParams.set('frame', frameName);
+          window.location.href = url.toString();
+        });
+        downloadGallery.appendChild(card);
+      });
+
+      downloadGallery.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const url = new URL('index.html', window.location.href);
+          url.searchParams.set('frame', btn.dataset.share);
+          navigator.clipboard.writeText(url.toString()).then(() => {
+            btn.classList.add('copied');
+            btn.setAttribute('aria-label', 'Link copied');
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.setAttribute('aria-label', 'Copy share link');
+            }, 1500);
+          });
+        });
+      });
+    }
+
+    async function initAuth() {
+      try {
+        const { data } = await window.FrameMe.supabase.auth.getUser();
+        window.FrameMe.currentUser = data.user || null;
+      } catch (error) {
+        window.FrameMe.currentUser = null;
+      }
+
+      const user = window.FrameMe?.currentUser || null;
+      if (!user) {
+        window.location.href = 'browse.html';
+        return;
+      }
+
+      authBtn.textContent = 'Sign out';
+      authBtn.onclick = async () => {
+        try {
+          await window.FrameMe.supabase.auth.signOut();
+          window.FrameMe.currentUser = null;
+          window.location.href = 'browse.html';
+        } catch (error) {
+          console.error('Sign out failed:', error);
+        }
+      };
+
+      loadDownloads();
+    }
+
+    initAuth();
+  </script>
+</body>
+</html>

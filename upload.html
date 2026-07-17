@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FrameMe — Upload a frame template</title>
+  <meta name="description" content="Upload your own frame template to use in FrameMe." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/FrameMe Logo Transparent.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__identity">
+        <p class="eyebrow">Upload</p>
+        <h1 class="wordmark"><img src="assets/icons/FrameMe Logo Transparent white.svg" alt="FrameMe" class="wordmark__img" /></h1>
+        <p class="subtitle">Share your own frame template with the community.</p>
+      </div>
+      <div class="hero__meta">
+        <a href="browse.html" class="btn-ghost">Back to gallery</a>
+        <button id="authBtn" class="btn-ghost" type="button">Sign in</button>
+      </div>
+    </header>
+
+    <main class="content-grid">
+      <section class="panel upload-panel" aria-label="Upload frame">
+        <div class="step-card">
+          <div class="step-card__head">
+            <span class="step-index">01</span>
+            <h2>Frame details</h2>
+          </div>
+           <form id="uploadForm" class="upload-form" novalidate>
+             <label for="frameName">Template name</label>
+             <input id="frameName" type="text" placeholder="e.g. Neon Border" required minlength="2" maxlength="60" />
+
+             <label for="frameCategory">Category</label>
+             <select id="frameCategory" class="file-input">
+               <option value="general">General</option>
+               <option value="aesthetic">Aesthetic</option>
+               <option value="minimal">Minimal</option>
+               <option value="birthday">Birthday</option>
+               <option value="event">Event</option>
+             </select>
+
+             <label for="frameFile">Frame image</label>
+             <input id="frameFile" type="file" accept="image/png,image/jpeg,image/webp" required />
+             <p class="help-text">Use a PNG with transparency for best results. JPG and WebP are also supported.</p>
+
+             <label class="checkbox-field">
+               <input id="isPublic" type="checkbox" checked />
+               <span>Make public</span>
+             </label>
+
+            <div id="uploadLimit" class="upload-limit">
+              <span id="uploadLimitIcon" class="upload-limit__icon"></span>
+              <span id="uploadLimitText" class="upload-limit__text">Checking limit...</span>
+            </div>
+
+            <p id="uploadError" class="auth-error" role="alert" aria-live="polite"></p>
+            <p id="uploadSuccess" class="upload-success" role="status" aria-live="polite"></p>
+
+            <button id="uploadSubmit" type="submit" class="btn-primary">Upload frame</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Website created by <strong>Nathaniel Sadomia</strong></p>
+    </footer>
+  </div>
+
+  <div id="authModal" class="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="authModal"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div class="modal__head">
+        <h2 id="authModalTitle">Sign in to FrameMe</h2>
+        <button class="modal__close" data-close="authModal" aria-label="Close">×</button>
+      </div>
+
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab" role="tab" aria-selected="true" data-auth-tab="email">Email</button>
+        <button class="auth-tab" role="tab" aria-selected="false" data-auth-tab="social">Google</button>
+      </div>
+
+      <div id="authPanelEmail" class="auth-panel">
+        <form id="authForm" class="auth-form" novalidate>
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+          <label for="authPassword">Password</label>
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="6" />
+          <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
+          <button id="authSubmit" type="submit" class="btn-primary">Sign in</button>
+          <button id="authToggle" type="button" class="btn-ghost">Need an account? Sign up</button>
+        </form>
+      </div>
+
+      <div id="authPanelSocial" class="auth-panel" hidden>
+        <div class="social-buttons">
+          <button id="googleBtn" type="button" class="social-btn social-btn--google">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+        </div>
+        <p class="auth-error" id="socialError" role="alert" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabaseClient.js"></script>
+  <script>
+    const authBtn = document.getElementById('authBtn');
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authError = document.getElementById('authError');
+    const authSubmit = document.getElementById('authSubmit');
+    const authToggle = document.getElementById('authToggle');
+    const googleBtn = document.getElementById('googleBtn');
+    const socialError = document.getElementById('socialError');
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const authPanels = {
+      email: document.getElementById('authPanelEmail'),
+      social: document.getElementById('authPanelSocial')
+    };
+    const uploadForm = document.getElementById('uploadForm');
+    const frameName = document.getElementById('frameName');
+    const frameCategory = document.getElementById('frameCategory');
+    const frameFile = document.getElementById('frameFile');
+    const isPublic = document.getElementById('isPublic');
+    const uploadError = document.getElementById('uploadError');
+    const uploadSuccess = document.getElementById('uploadSuccess');
+    const uploadLimit = document.getElementById('uploadLimit');
+    const uploadLimitText = document.getElementById('uploadLimitText');
+    const uploadLimitIcon = document.getElementById('uploadLimitIcon');
+
+    let isSignUp = false;
+    let remainingCredits = 0;
+
+    function updateAuthUI() {
+      const user = window.FrameMe?.currentUser || null;
+      if (user) {
+        authBtn.textContent = 'Sign out';
+        authBtn.onclick = signOut;
+      } else {
+        authBtn.textContent = 'Sign in';
+        authBtn.onclick = openAuthModal;
+      }
+    }
+
+    function openAuthModal() {
+      authModal.classList.add('modal--open');
+      authModal.setAttribute('aria-hidden', 'false');
+      switchAuthTab('email');
+      authEmail.focus();
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('modal--open');
+      authModal.setAttribute('aria-hidden', 'true');
+      authError.textContent = '';
+      socialError.textContent = '';
+      authForm.reset();
+    }
+
+    function setAuthError(message) {
+      authError.textContent = message;
+    }
+
+    function switchAuthTab(tab) {
+      authTabs.forEach(t => {
+        const isSelected = t.dataset.authTab === tab;
+        t.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        t.tabIndex = isSelected ? 0 : -1;
+      });
+      Object.entries(authPanels).forEach(([key, panel]) => {
+        panel.hidden = key !== tab;
+      });
+    }
+
+    function getRedirectUrl() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    async function signInWithEmail() {
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        setAuthError('Please enter both email and password.');
+        return;
+      }
+
+      try {
+        authSubmit.disabled = true;
+        const { data, error } = await window.FrameMe.supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        window.FrameMe.currentUser = data.user;
+        closeAuthModal();
+        updateAuthUI();
+        await refreshUploadLimit();
+      } catch (error) {
+        setAuthError(error.message || 'Something went wrong.');
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function signUpWithEmail() {
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        setAuthError('Please enter both email and password.');
+        return;
+      }
+
+      if (password.length < 6) {
+        setAuthError('Password must be at least 6 characters.');
+        return;
+      }
+
+      try {
+        authSubmit.disabled = true;
+        const { error } = await window.FrameMe.supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setAuthError('Check your email for the confirmation link.');
+        authToggle.textContent = 'Have an account? Sign in';
+        isSignUp = false;
+        authSubmit.textContent = 'Sign in';
+      } catch (error) {
+        setAuthError(error.message || 'Something went wrong.');
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function signInWithOAuth(provider) {
+      try {
+        socialError.textContent = '';
+        const { data, error } = await window.FrameMe.supabase.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: getRedirectUrl() }
+        });
+        if (error) throw error;
+      } catch (error) {
+        socialError.textContent = error.message || 'Something went wrong.';
+      }
+    }
+
+    async function signOut() {
+      try {
+        await window.FrameMe.supabase.auth.signOut();
+        window.FrameMe.currentUser = null;
+        updateAuthUI();
+      } catch (error) {
+        console.error('Sign out failed:', error);
+      }
+    }
+
+    document.querySelectorAll('[data-close="authModal"]').forEach(el => {
+      el.addEventListener('click', closeAuthModal);
+    });
+
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => switchAuthTab(tab.dataset.authTab));
+    });
+
+    authToggle.addEventListener('click', () => {
+      isSignUp = !isSignUp;
+      authSubmit.textContent = isSignUp ? 'Sign up' : 'Sign in';
+      authToggle.textContent = isSignUp ? 'Have an account? Sign in' : 'Need an account? Sign up';
+      setAuthError('');
+    });
+
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (isSignUp) {
+        signUpWithEmail();
+      } else {
+        signInWithEmail();
+      }
+    });
+
+    googleBtn.addEventListener('click', () => signInWithOAuth('google'));
+
+    authModal.addEventListener('click', (event) => {
+      if (event.target === authModal) closeAuthModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && authModal.classList.contains('modal--open')) {
+        closeAuthModal();
+      }
+    });
+
+    async function refreshUploadLimit() {
+      const { data: { user } } = await window.FrameMe.supabase.auth.getUser();
+      const iconBase = 'assets/icons/';
+      if (!user) {
+        uploadLimitText.textContent = 'Sign in to see upload limit';
+        uploadLimitIcon.innerHTML = `<img src="${iconBase}lock.svg" alt="" />`;
+        return;
+      }
+
+      try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const { data: todayFrames, error: countError } = await window.FrameMe.supabase
+          .from('frames')
+          .select('id')
+          .eq('user_id', user.id)
+          .gte('created_at', todayStart.toISOString());
+
+        if (countError) {
+          console.error('Failed to check upload limit:', countError);
+          uploadLimitText.textContent = 'Unable to check limit';
+          uploadLimitIcon.innerHTML = `<img src="${iconBase}alert-circle.svg" alt="" />`;
+          return;
+        }
+
+        const used = todayFrames?.length || 0;
+        remainingCredits = Math.max(0, 2 - used);
+
+        if (remainingCredits === 0) {
+          uploadLimitText.textContent = 'No uploads left today';
+          uploadLimitIcon.innerHTML = `<img src="${iconBase}x-circle.svg" alt="" />`;
+          uploadLimit.classList.add('upload-limit--empty');
+          uploadLimit.classList.remove('upload-limit--ok');
+        } else if (remainingCredits === 1) {
+          uploadLimitText.textContent = '1 upload left today';
+          uploadLimitIcon.innerHTML = `<img src="${iconBase}alert-circle.svg" alt="" />`;
+          uploadLimit.classList.add('upload-limit--ok');
+          uploadLimit.classList.remove('upload-limit--empty');
+        } else {
+          uploadLimitText.textContent = '2 uploads left today';
+          uploadLimitIcon.innerHTML = `<img src="${iconBase}check-circle.svg" alt="" />`;
+          uploadLimit.classList.add('upload-limit--ok');
+          uploadLimit.classList.remove('upload-limit--empty');
+        }
+      } catch (error) {
+        console.error('Failed to check upload limit:', error);
+        uploadLimitText.textContent = 'Unable to check limit';
+        uploadLimitIcon.innerHTML = `<img src="${iconBase}alert-circle.svg" alt="" />`;
+      }
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      uploadError.textContent = '';
+      uploadSuccess.textContent = '';
+
+      const { data: { user } } = await window.FrameMe.supabase.auth.getUser();
+      if (!user) {
+        openAuthModal();
+        return;
+      }
+
+      console.log('[Upload] Auth user ID:', user.id);
+      console.log('[Upload] Remaining credits:', remainingCredits);
+
+      if (remainingCredits <= 0) {
+        uploadError.textContent = 'Daily limit reached. You can upload up to 2 frames per day.';
+        return;
+      }
+
+      const name = frameName.value.trim();
+      const category = frameCategory.value;
+      const file = frameFile.files[0];
+      const publicFlag = isPublic.checked;
+
+      if (!name || name.length < 2) {
+        uploadError.textContent = 'Please enter a template name (at least 2 characters).';
+        return;
+      }
+
+      if (!file) {
+        uploadError.textContent = 'Please choose an image file.';
+        return;
+      }
+
+      try {
+        const submitBtn = document.getElementById('uploadSubmit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading...';
+
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileName = `${Date.now()}_${name.replace(/[^a-zA-Z0-9-_]+/g, '_')}.${fileExt}`;
+        const filePath = `public/${fileName}`;
+
+        const { error: storageUploadError } = await window.FrameMe.supabase.storage
+          .from('frames')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (storageUploadError) throw storageUploadError;
+
+        const { data: publicUrlData } = window.FrameMe.supabase.storage
+          .from('frames')
+          .getPublicUrl(filePath);
+
+        const publicUrl = publicUrlData?.publicUrl || '';
+
+        if (!publicUrl) {
+          throw new Error('Could not get public URL for uploaded frame.');
+        }
+
+        const { error: insertError } = await window.FrameMe.supabase
+          .from('frames')
+          .insert({
+            name: name,
+            src: publicUrl,
+            user_id: user.id,
+            is_public: publicFlag,
+            category: category
+          });
+
+        if (insertError) throw insertError;
+
+        uploadSuccess.textContent = 'Frame uploaded successfully! Redirecting to gallery...';
+        uploadForm.reset();
+        await refreshUploadLimit();
+
+        setTimeout(() => {
+          window.location.href = 'browse.html';
+        }, 1500);
+      } catch (error) {
+        uploadError.textContent = error.message || 'Upload failed. Please try again.';
+      } finally {
+        const submitBtn = document.getElementById('uploadSubmit');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Upload frame';
+      }
+    });
+
+    async function initAuth() {
+      try {
+        const { data } = await window.FrameMe.supabase.auth.getUser();
+        window.FrameMe.currentUser = data.user || null;
+      } catch (error) {
+        window.FrameMe.currentUser = null;
+      }
+      updateAuthUI();
+      await refreshUploadLimit();
+    }
+
+    initAuth();
+  </script>
+</body>
+</html>
