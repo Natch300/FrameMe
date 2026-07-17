@@ -397,7 +397,7 @@ button:disabled {
 
 .canvas-shell {
   position: relative;
-  flex: none;
+  width: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: radial-gradient(circle at 50% 20%, rgba(63, 211, 214, 0.05), transparent 55%), var(--ink-deep);
@@ -405,9 +405,10 @@ button:disabled {
 }
 
 #previewCanvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
-  max-height: 70vh;
+  height: 100%;
   display: block;
   cursor: grab;
   border-radius: var(--radius-sm);
