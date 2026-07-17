@@ -725,9 +725,9 @@ button:disabled {
 
 .text-link {
   color: var(--cyan);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration: none;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .text-link:hover {
@@ -750,6 +750,7 @@ button:disabled {
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   box-shadow: 0 14px 30px rgba(242, 169, 60, 0.18);
+  text-align: center;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -944,19 +945,21 @@ button:disabled {
 
 .upload-form {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .upload-form label {
   display: block;
   font-size: 0.88rem;
   color: var(--text-dim);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
-.upload-form input[type="text"] {
+.upload-form input[type="text"],
+.upload-form select {
   width: 100%;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line-strong);
   background: var(--panel-alt);
@@ -964,32 +967,92 @@ button:disabled {
   font-family: var(--font-body);
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.upload-form input[type="text"]:focus {
+.upload-form input[type="text"]:focus,
+.upload-form select:focus {
   border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(63, 211, 214, 0.1);
 }
 
-.upload-form input[type="file"] {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--line-strong);
-  background: var(--panel-alt);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 0.92rem;
+.upload-form select {
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%236b7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.upload-form .file-input-wrapper {
+  position: relative;
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--panel-alt);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+.upload-form .file-input-wrapper:hover {
+  border-color: var(--cyan);
+  background: rgba(63, 211, 214, 0.03);
+}
+
+.upload-form .file-input-wrapper input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.upload-form .file-input-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.upload-form .file-input-label svg {
+  width: 32px;
+  height: 32px;
+  color: var(--text-dim);
+}
+
+.upload-form .file-input-label span {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+.upload-form .file-input-label strong {
+  color: var(--cyan);
+  font-weight: 500;
 }
 
 .checkbox-field {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   font-size: 0.95rem;
   color: var(--text-dim);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--panel-alt);
+  transition: border-color 0.2s ease;
+}
+
+.checkbox-field:hover {
+  border-color: var(--text-faint);
 }
 
 .checkbox-field input[type="checkbox"] {
@@ -997,6 +1060,43 @@ button:disabled {
   height: 18px;
   accent-color: var(--cyan);
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.upload-limit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+.upload-limit__icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.upload-limit__icon img {
+  width: 18px;
+  height: 18px;
+}
+
+.upload-limit--ok {
+  border-color: rgba(63, 211, 214, 0.3);
+  color: var(--cyan);
+}
+
+.upload-limit--empty {
+  border-color: rgba(255, 138, 138, 0.3);
+  color: #ff8a8a;
 }
 
 .upload-success {
@@ -1149,8 +1249,6 @@ button:disabled {
 
 .site-footer a:hover {
   color: var(--cyan);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 /* ---------- Focus states ---------- */
