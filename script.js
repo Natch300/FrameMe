@@ -85,12 +85,8 @@ async function resolveSelectedFrame() {
 }
 
 function updatePreviewVisibility() {
-  const hasPreview = userPhoto && frameImage && frameImage.complete && frameImage.naturalWidth && photoImage && photoImage.complete;
-  console.log('[updatePreviewVisibility] hasPreview:', hasPreview);
-  previewPlaceholder.style.display = hasPreview ? 'none' : 'grid';
-  if (hasPreview) {
-    previewCanvas.style.visibility = 'visible';
-  }
+  const hasSomething = (userPhoto && photoImage && photoImage.complete) || (frameImage && frameImage.complete && frameImage.naturalWidth);
+  previewPlaceholder.style.display = hasSomething ? 'none' : 'grid';
 }
 
 function fitImageOnCanvas(image, canvasWidth, canvasHeight) {
@@ -174,21 +170,6 @@ function loadPhotoFromFile(file) {
         previewPlaceholder.style.display = 'grid';
         await frameReadyPromise;
       }
-      if (selectedFrame && (!frameImage.complete || !frameImage.naturalWidth)) {
-        previewPlaceholder.textContent = 'Loading frame...';
-        previewPlaceholder.style.display = 'grid';
-        await new Promise(resolve => {
-          const onLoad = () => {
-            frameImage.removeEventListener('load', onLoad);
-            resolve();
-          };
-          frameImage.addEventListener('load', onLoad);
-          setTimeout(() => {
-            frameImage.removeEventListener('load', onLoad);
-            resolve();
-          }, 10000);
-        });
-      }
       renderCanvas();
     };
     photoImage.onerror = (e) => {
@@ -207,9 +188,11 @@ function loadPhotoFromFile(file) {
 }
 
 function renderCanvas() {
-  const canRender = selectedFrame && userPhoto && frameImage && frameImage.complete && frameImage.naturalWidth && photoImage && photoImage.complete;
-  console.log('[renderCanvas] canRender:', canRender, 'selectedFrame:', selectedFrame?.name, 'userPhoto:', !!userPhoto, 'frameImage.complete:', frameImage.complete, 'photoImage.complete:', photoImage.complete);
-  if (!canRender) {
+  const hasFrame = selectedFrame && frameImage && frameImage.complete && frameImage.naturalWidth;
+  const hasPhoto = userPhoto && photoImage && photoImage.complete;
+  console.log('[renderCanvas] hasFrame:', hasFrame, 'hasPhoto:', hasPhoto);
+
+  if (!hasFrame && !hasPhoto) {
     previewPlaceholder.textContent = 'Select a photo to preview your design.';
     updatePreviewVisibility();
     updatePhotoControls();
@@ -217,8 +200,21 @@ function renderCanvas() {
     return;
   }
 
-  let canvasWidth = frameImage.naturalWidth;
-  let canvasHeight = frameImage.naturalHeight;
+  let canvasWidth = hasFrame ? frameImage.naturalWidth : photoImage.naturalWidth;
+  let canvasHeight = hasFrame ? frameImage.naturalHeight : photoImage.naturalHeight;
+
+  if (hasFrame && hasPhoto) {
+    const photoAspect = photoImage.naturalWidth / photoImage.naturalHeight;
+    const frameAspect = frameImage.naturalWidth / frameImage.naturalHeight;
+    if (photoAspect > frameAspect) {
+      canvasWidth = frameImage.naturalWidth;
+      canvasHeight = frameImage.naturalHeight;
+    } else {
+      canvasWidth = photoImage.naturalWidth;
+      canvasHeight = photoImage.naturalHeight;
+    }
+  }
+
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const maxDim = isMobile ? 2048 : 4096;
   if (canvasWidth > maxDim || canvasHeight > maxDim) {
@@ -226,34 +222,30 @@ function renderCanvas() {
     canvasWidth = Math.floor(canvasWidth * ratio);
     canvasHeight = Math.floor(canvasHeight * ratio);
   }
+
   previewCanvas.width = canvasWidth;
   previewCanvas.height = canvasHeight;
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  const drawFrame = () => {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
+  if (hasPhoto) {
     const fit = fitImageOnCanvas(photoImage, canvasWidth, canvasHeight);
     const scaledWidth = fit.width * photoScale;
     const scaledHeight = fit.height * photoScale;
     const x = fit.x + (fit.width - scaledWidth) / 2 + (offsetX / 100) * fit.width;
     const y = fit.y + (fit.height - scaledHeight) / 2 + (offsetY / 100) * fit.height;
-
     ctx.drawImage(photoImage, x, y, scaledWidth, scaledHeight);
-    ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
-  };
-
-  drawFrame();
-  if (isMobile) {
-    requestAnimationFrame(() => requestAnimationFrame(drawFrame));
   }
 
-  console.log('[renderCanvas] done', canvasWidth, canvasHeight);
-  updatePreviewVisibility();
+  if (hasFrame) {
+    ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
+  }
+
+  previewPlaceholder.style.display = 'none';
   updatePhotoControls();
   updateSliderLabels();
-  downloadBtn.disabled = false;
+  downloadBtn.disabled = !hasFrame;
   if (shareFrameBtn) {
     shareFrameBtn.hidden = !selectedFrame;
   }
