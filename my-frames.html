@@ -297,7 +297,8 @@
       editError.textContent = '';
       editSuccess.textContent = '';
 
-      const { data: { user } } = await window.FrameMe.supabase.auth.getSession();
+      const { data } = await window.FrameMe.supabase.auth.getSession();
+      const user = data.session?.user || null;
       if (!user || !editingFrameId) {
         editError.textContent = 'Session expired. Please refresh and sign in again.';
         return;
