@@ -46,7 +46,7 @@ let undoStack = [];
 let redoStack = [];
 const MAX_UNDO = 50;
 
-function resolveSelectedFrame() {
+async function resolveSelectedFrame() {
   const params = new URLSearchParams(window.location.search);
   const frameId = params.get('frameId');
   if (frameId) {
@@ -55,6 +55,27 @@ function resolveSelectedFrame() {
       selectedFrame = match;
       return;
     }
+    try {
+      const { data, error } = await window.FrameMe.supabase
+        .from('frames')
+        .select('id, name, src, category, is_public, user_id')
+        .eq('id', frameId)
+        .maybeSingle();
+      if (!error && data) {
+        const currentUser = window.FrameMe?.currentUser || null;
+        const isOwner = currentUser && data.user_id === currentUser.id;
+        if (data.is_public || isOwner) {
+          selectedFrame = data;
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to resolve shared frame:', error);
+    }
+    previewPlaceholder.textContent = 'This template is private or no longer available.';
+    previewPlaceholder.style.display = 'grid';
+    selectedFrame = null;
+    return;
   }
   const frameName = params.get('frame');
   if (frameName) {
@@ -370,7 +391,7 @@ async function fetchSupabaseFrames() {
   } catch (error) {
     console.error('Failed to load frames from Supabase:', error);
   }
-  resolveSelectedFrame();
+  await resolveSelectedFrame();
   loadFrameImage();
   updatePhotoControls();
   updatePreviewVisibility();
