@@ -305,7 +305,7 @@
     });
 
     async function refreshUploadLimit() {
-      const { data: { user } } = await window.FrameMe.supabase.auth.getUser();
+      const { data: { user } } = await window.FrameMe.supabase.auth.getSession();
       const iconBase = 'assets/icons/';
       if (!user) {
         uploadLimitText.textContent = 'Sign in to see upload limit';
@@ -361,7 +361,7 @@
       uploadError.textContent = '';
       uploadSuccess.textContent = '';
 
-      const { data: { user } } = await window.FrameMe.supabase.auth.getUser();
+      const { data: { user } } = await window.FrameMe.supabase.auth.getSession();
       if (!user) {
         openAuthModal();
         return;
@@ -448,8 +448,8 @@
 
     async function initAuth() {
       try {
-        const { data } = await window.FrameMe.supabase.auth.getUser();
-        window.FrameMe.currentUser = data.user || null;
+        const { data } = await window.FrameMe.supabase.auth.getSession();
+        window.FrameMe.currentUser = data.session?.user || null;
       } catch (error) {
         window.FrameMe.currentUser = null;
       }

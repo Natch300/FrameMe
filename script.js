@@ -598,8 +598,8 @@ document.addEventListener('keydown', (event) => {
 
 async function initAuth() {
   try {
-    const { data } = await window.FrameMe.supabase.auth.getUser();
-    window.FrameMe.currentUser = data.user || null;
+    const { data } = await window.FrameMe.supabase.auth.getSession();
+    window.FrameMe.currentUser = data.session?.user || null;
   } catch (error) {
     window.FrameMe.currentUser = null;
   }

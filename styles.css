@@ -558,15 +558,9 @@ button:disabled {
 .frame-card__img-wrap {
   position: relative;
   overflow: hidden;
-}
-
-.frame-card__img-wrap::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 55%;
-  background: linear-gradient(to top, rgba(10, 13, 18, 0.55), transparent);
-  pointer-events: none;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .frame-card__actions {
