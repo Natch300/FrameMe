@@ -317,9 +317,20 @@
         `;
         card.addEventListener('click', (e) => {
           if (e.target.closest('.share-btn')) return;
-          const url = new URL('index.html', window.location.href);
-          url.searchParams.set('frame', frameName);
-          window.location.href = url.toString();
+          const download = downloads.find(d => d.frame_name === frameName);
+          const imageData = download?.image_data;
+          if (!imageData) {
+            const url = new URL('index.html', window.location.href);
+            url.searchParams.set('frame', frameName);
+            window.location.href = url.toString();
+            return;
+          }
+          const link = document.createElement('a');
+          link.href = imageData;
+          link.download = `framed-${frameName.toLowerCase()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         });
         downloadGallery.appendChild(card);
       });
