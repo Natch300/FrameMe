@@ -86,7 +86,11 @@ async function resolveSelectedFrame() {
 
 function updatePreviewVisibility() {
   const hasPreview = userPhoto && frameImage && frameImage.complete && frameImage.naturalWidth && photoImage && photoImage.complete;
+  console.log('[updatePreviewVisibility] hasPreview:', hasPreview);
   previewPlaceholder.style.display = hasPreview ? 'none' : 'grid';
+  if (hasPreview) {
+    previewCanvas.style.visibility = 'visible';
+  }
 }
 
 function fitImageOnCanvas(image, canvasWidth, canvasHeight) {
@@ -156,26 +160,59 @@ function updateUndoRedoButtons() {
 
 function loadPhotoFromFile(file) {
   if (!file) return;
+  console.log('[loadPhotoFromFile] loading:', file.name, file.type, file.size);
   userPhoto = file;
   const reader = new FileReader();
   reader.onload = () => {
+    console.log('[loadPhotoFromFile] FileReader done, length:', reader.result.length);
     photoImage = new Image();
-    photoImage.onload = () => {
-      resetPhotoTransform();
-      renderCanvas();
+  photoImage.onload = () => {
+    console.log('[loadPhotoFromFile] photoImage loaded:', photoImage.naturalWidth, photoImage.naturalHeight);
+    resetPhotoTransform();
+    const tryRender = () => {
+      if (selectedFrame && frameImage.complete && frameImage.naturalWidth) {
+        renderCanvas();
+      } else {
+        console.log('[loadPhotoFromFile] frame not ready yet, waiting...');
+        previewPlaceholder.textContent = 'Loading frame...';
+        previewPlaceholder.style.display = 'grid';
+      }
     };
-    photoImage.onerror = () => {
-      console.error('Unable to load selected photo.');
-      previewPlaceholder.textContent = 'Unable to load the selected photo.';
+    tryRender();
+    if (!(selectedFrame && frameImage.complete && frameImage.naturalWidth)) {
+      const onFrameLoad = () => {
+        frameImage.removeEventListener('load', onFrameLoad);
+        console.log('[loadPhotoFromFile] frame loaded, rendering now');
+        renderCanvas();
+      };
+      frameImage.addEventListener('load', onFrameLoad);
+      setTimeout(() => {
+        frameImage.removeEventListener('load', onFrameLoad);
+        if (!(selectedFrame && frameImage.complete && frameImage.naturalWidth)) {
+          previewPlaceholder.textContent = 'Frame failed to load. Try selecting a different template.';
+          previewPlaceholder.style.display = 'grid';
+        }
+      }, 8000);
+    }
+  };
+    photoImage.onerror = (e) => {
+      console.error('[loadPhotoFromFile] photoImage failed to load:', e);
+      previewPlaceholder.textContent = 'Unable to load the selected photo. Try a different image format like JPG or PNG.';
       previewPlaceholder.style.display = 'grid';
     };
     photoImage.src = reader.result;
+  };
+  reader.onerror = (e) => {
+    console.error('[loadPhotoFromFile] FileReader failed:', e);
+    previewPlaceholder.textContent = 'Unable to read the selected photo. Try choosing the file again.';
+    previewPlaceholder.style.display = 'grid';
   };
   reader.readAsDataURL(file);
 }
 
 function renderCanvas() {
   const canRender = selectedFrame && userPhoto && frameImage && frameImage.complete && frameImage.naturalWidth && photoImage && photoImage.complete;
+  console.log('[renderCanvas] canRender:', canRender, 'selectedFrame:', selectedFrame?.name, 'userPhoto:', !!userPhoto, 'frameImage.complete:', frameImage.complete, 'photoImage.complete:', photoImage.complete);
   if (!canRender) {
     previewPlaceholder.textContent = 'Select a photo to preview your design.';
     updatePreviewVisibility();
@@ -184,28 +221,44 @@ function renderCanvas() {
     return;
   }
 
-  const canvasWidth = frameImage.naturalWidth;
-  const canvasHeight = frameImage.naturalHeight;
+  let canvasWidth = frameImage.naturalWidth;
+  let canvasHeight = frameImage.naturalHeight;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const maxDim = isMobile ? 2048 : 4096;
+  if (canvasWidth > maxDim || canvasHeight > maxDim) {
+    const ratio = Math.min(maxDim / canvasWidth, maxDim / canvasHeight);
+    canvasWidth = Math.floor(canvasWidth * ratio);
+    canvasHeight = Math.floor(canvasHeight * ratio);
+  }
   previewCanvas.width = canvasWidth;
   previewCanvas.height = canvasHeight;
   const canvasShell = previewCanvas.parentElement;
   if (canvasShell) {
     canvasShell.style.aspectRatio = `${canvasWidth} / ${canvasHeight}`;
   }
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  const drawFrame = () => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  const fit = fitImageOnCanvas(photoImage, canvasWidth, canvasHeight);
-  const scaledWidth = fit.width * photoScale;
-  const scaledHeight = fit.height * photoScale;
-  const x = fit.x + (fit.width - scaledWidth) / 2 + (offsetX / 100) * fit.width;
-  const y = fit.y + (fit.height - scaledHeight) / 2 + (offsetY / 100) * fit.height;
+    const fit = fitImageOnCanvas(photoImage, canvasWidth, canvasHeight);
+    const scaledWidth = fit.width * photoScale;
+    const scaledHeight = fit.height * photoScale;
+    const x = fit.x + (fit.width - scaledWidth) / 2 + (offsetX / 100) * fit.width;
+    const y = fit.y + (fit.height - scaledHeight) / 2 + (offsetY / 100) * fit.height;
 
-  ctx.drawImage(photoImage, x, y, scaledWidth, scaledHeight);
-  ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
+    ctx.drawImage(photoImage, x, y, scaledWidth, scaledHeight);
+    ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
+  };
 
+  drawFrame();
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    requestAnimationFrame(() => requestAnimationFrame(drawFrame));
+  }
+
+  console.log('[renderCanvas] done', canvasWidth, canvasHeight);
   updatePreviewVisibility();
   updatePhotoControls();
   updateSliderLabels();
@@ -394,6 +447,7 @@ async function fetchSupabaseFrames() {
 }
 
 photoInput.addEventListener('change', event => {
+  console.log('[photoInput] change event fired', event.target.files[0]?.name, event.target.files[0]?.type, event.target.files[0]?.size);
   const file = event.target.files[0];
   if (!file) {
     userPhoto = null;

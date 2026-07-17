@@ -398,6 +398,7 @@ button:disabled {
 .canvas-shell {
   position: relative;
   width: 100%;
+  aspect-ratio: 3 / 4;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: radial-gradient(circle at 50% 20%, rgba(63, 211, 214, 0.05), transparent 55%), var(--ink-deep);
@@ -407,8 +408,6 @@ button:disabled {
 #previewCanvas {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   display: block;
   cursor: grab;
   border-radius: var(--radius-sm);
@@ -1183,6 +1182,18 @@ input:focus-visible,
   .preview-card {
     min-height: 460px;
   }
+
+  .canvas-shell {
+    min-height: 320px;
+    max-height: 65vh;
+  }
+
+  #previewCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1198,6 +1209,18 @@ input:focus-visible,
 
   .frame-gallery {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .canvas-shell {
+    min-height: 260px;
+    max-height: 60vh;
+  }
+
+  #previewCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 
