@@ -1323,6 +1323,20 @@ input:focus-visible,
     height: auto;
   }
 
+  .frame-card .share-btn,
+  .frame-card .edit-btn,
+  .frame-card .duplicate-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .frame-card .share-btn img,
+  .frame-card .edit-btn img,
+  .frame-card .duplicate-btn img {
+    width: 14px;
+    height: 14px;
+  }
+
   .search-bar {
     flex-wrap: wrap;
   }
@@ -1388,6 +1402,20 @@ input:focus-visible,
 
   .frame-card__img-wrap img {
     height: 140px;
+  }
+
+  .frame-card .share-btn,
+  .frame-card .edit-btn,
+  .frame-card .duplicate-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .frame-card .share-btn img,
+  .frame-card .edit-btn img,
+  .frame-card .duplicate-btn img {
+    width: 12px;
+    height: 12px;
   }
 
   .frame-card span {
@@ -1477,6 +1505,20 @@ input:focus-visible,
 
   .hero__meta .btn-ghost {
     width: 100%;
+  }
+
+  .frame-card .share-btn,
+  .frame-card .edit-btn,
+  .frame-card .duplicate-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .frame-card .share-btn img,
+  .frame-card .edit-btn img,
+  .frame-card .duplicate-btn img {
+    width: 11px;
+    height: 11px;
   }
 }
 
