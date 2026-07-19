@@ -1297,6 +1297,17 @@ input:focus-visible,
     align-items: flex-start;
   }
 
+  .hero__meta {
+    width: 100%;
+  }
+
+  .hero__meta .btn-ghost {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
+  }
+
   .preview-card {
     min-height: unset;
   }
@@ -1310,6 +1321,52 @@ input:focus-visible,
     max-height: 55vh;
     width: auto;
     height: auto;
+  }
+
+  .search-bar {
+    flex-wrap: wrap;
+  }
+
+  .search-bar input {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .category-filter {
+    flex: 1 1 auto;
+  }
+
+  .frame-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .frame-card__img-wrap img {
+    height: 160px;
+  }
+
+  .preview-card__head {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .preview-card__hint {
+    width: 100%;
+  }
+
+  .step-card__head h2 {
+    font-size: 1rem;
+  }
+
+  .undo-redo-group {
+    flex-wrap: wrap;
+  }
+
+  .undo-redo-group .btn-ghost {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    justify-content: center;
   }
 }
 
@@ -1326,6 +1383,16 @@ input:focus-visible,
 
   .frame-gallery {
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .frame-card__img-wrap img {
+    height: 140px;
+  }
+
+  .frame-card span {
+    font-size: 0.78rem;
+    padding: 10px;
   }
 
   .canvas-shell {
@@ -1337,6 +1404,79 @@ input:focus-visible,
     max-height: 50vh;
     width: auto;
     height: auto;
+  }
+
+  .btn-ghost,
+  .btn-primary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .modal__dialog {
+    margin: 16px;
+    padding: 20px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+
+  .modal__close {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slider-group {
+    margin-bottom: 4px;
+  }
+
+  .value-badge {
+    display: inline-block;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  .search-bar {
+    gap: 8px;
+  }
+
+  .search-bar input,
+  .category-filter {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+  }
+
+  .wordmark {
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+  }
+
+  .wordmark__img {
+    height: clamp(1.6rem, 6vw, 2.4rem);
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .frame-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .frame-card__img-wrap img {
+    height: 200px;
+  }
+
+  .hero__meta {
+    flex-direction: column;
+  }
+
+  .hero__meta .btn-ghost {
+    width: 100%;
   }
 }
 
