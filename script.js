@@ -45,6 +45,18 @@ let allFrames = [];
 let undoStack = [];
 let redoStack = [];
 const MAX_UNDO = 50;
+let currentCanvasWidth = 900;
+let currentCanvasHeight = 1200;
+let renderScheduled = false;
+
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => {
+    renderScheduled = false;
+    renderCanvas();
+  });
+}
 
 async function resolveSelectedFrame() {
   const params = new URLSearchParams(window.location.search);
@@ -126,7 +138,7 @@ function undo() {
   offsetX = state.offsetX;
   offsetY = state.offsetY;
   syncControlsFromState();
-  renderCanvas();
+  scheduleRender();
   updateUndoRedoButtons();
 }
 
@@ -138,7 +150,7 @@ function redo() {
   offsetX = state.offsetX;
   offsetY = state.offsetY;
   syncControlsFromState();
-  renderCanvas();
+  scheduleRender();
   updateUndoRedoButtons();
 }
 
@@ -185,7 +197,7 @@ function loadPhotoFromFile(file) {
           }, 10000);
         });
       }
-      renderCanvas();
+      scheduleRender();
     };
     photoImage.onerror = (e) => {
       console.error('[loadPhotoFromFile] photoImage failed to load:', e);
@@ -215,25 +227,30 @@ function renderCanvas() {
     return;
   }
 
-  let canvasWidth = hasFrame ? frameImage.naturalWidth : photoImage.naturalWidth;
-  let canvasHeight = hasFrame ? frameImage.naturalHeight : photoImage.naturalHeight;
+  let targetWidth = hasFrame ? frameImage.naturalWidth : photoImage.naturalWidth;
+  let targetHeight = hasFrame ? frameImage.naturalHeight : photoImage.naturalHeight;
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const maxDim = isMobile ? 2048 : 4096;
-  if (canvasWidth > maxDim || canvasHeight > maxDim) {
-    const ratio = Math.min(maxDim / canvasWidth, maxDim / canvasHeight);
-    canvasWidth = Math.floor(canvasWidth * ratio);
-    canvasHeight = Math.floor(canvasHeight * ratio);
+  if (targetWidth > maxDim || targetHeight > maxDim) {
+    const ratio = Math.min(maxDim / targetWidth, maxDim / targetHeight);
+    targetWidth = Math.floor(targetWidth * ratio);
+    targetHeight = Math.floor(targetHeight * ratio);
   }
 
-  previewCanvas.width = canvasWidth;
-  previewCanvas.height = canvasHeight;
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+  if (targetWidth !== currentCanvasWidth || targetHeight !== currentCanvasHeight) {
+    currentCanvasWidth = targetWidth;
+    currentCanvasHeight = targetHeight;
+    previewCanvas.width = targetWidth;
+    previewCanvas.height = targetHeight;
+  }
+
+  ctx.clearRect(0, 0, currentCanvasWidth, currentCanvasHeight);
   ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  ctx.fillRect(0, 0, currentCanvasWidth, currentCanvasHeight);
 
   if (hasPhoto) {
-    const fit = fitImageOnCanvas(photoImage, canvasWidth, canvasHeight);
+    const fit = fitImageOnCanvas(photoImage, currentCanvasWidth, currentCanvasHeight);
     const scaledWidth = fit.width * photoScale;
     const scaledHeight = fit.height * photoScale;
     const x = fit.x + (fit.width - scaledWidth) / 2 + (offsetX / 100) * fit.width;
@@ -242,7 +259,7 @@ function renderCanvas() {
   }
 
   if (hasFrame) {
-    ctx.drawImage(frameImage, 0, 0, canvasWidth, canvasHeight);
+    ctx.drawImage(frameImage, 0, 0, currentCanvasWidth, currentCanvasHeight);
   }
 
   previewPlaceholder.style.display = 'none';
@@ -289,7 +306,7 @@ async function loadFrameImage() {
     }
   }
 
-  renderCanvas();
+  scheduleRender();
 }
 
 function resetPhotoTransform() {
@@ -466,7 +483,7 @@ photoInput.addEventListener('change', event => {
     userPhoto = null;
     downloadBtn.disabled = true;
     updatePhotoControls();
-    renderCanvas();
+    scheduleRender();
     return;
   }
   loadPhotoFromFile(file);
@@ -508,26 +525,26 @@ previewCanvas.addEventListener('wheel', (e) => {
   const delta = e.deltaY > 0 ? -0.05 : 0.05;
   photoScale = Math.max(0.5, Math.min(2, photoScale + delta));
   syncControlsFromState();
-  renderCanvas();
+  scheduleRender();
 }, { passive: false });
 
 scaleInput.addEventListener('input', event => {
   photoScale = Number(event.target.value) / 100;
-  renderCanvas();
+  scheduleRender();
 });
 
 scaleInput.addEventListener('change', () => pushUndo());
 
 offsetXInput.addEventListener('input', event => {
   offsetX = Number(event.target.value);
-  renderCanvas();
+  scheduleRender();
 });
 
 offsetXInput.addEventListener('change', () => pushUndo());
 
 offsetYInput.addEventListener('input', event => {
   offsetY = Number(event.target.value);
-  renderCanvas();
+  scheduleRender();
 });
 
 offsetYInput.addEventListener('change', () => pushUndo());
@@ -551,7 +568,7 @@ previewCanvas.addEventListener('pointermove', event => {
   offsetY = Math.max(-100, Math.min(100, offsetY));
   offsetXInput.value = offsetX;
   offsetYInput.value = offsetY;
-  renderCanvas();
+  scheduleRender();
 });
 
 previewCanvas.addEventListener('pointerup', () => {
@@ -581,7 +598,7 @@ redoBtn.addEventListener('click', redo);
 
 downloadBtn.addEventListener('click', async () => {
   if (downloadBtn.disabled) return;
-  renderCanvas();
+  scheduleRender();
   try {
     const blob = await new Promise(resolve => previewCanvas.toBlob(resolve, 'image/png'));
     if (!blob) {
